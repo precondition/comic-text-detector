@@ -1,6 +1,3 @@
-from torch.autograd.grad_mode import F
-from torch.nn.functional import sigmoid
-from torch.nn.modules.loss import CrossEntropyLoss
 from torch.optim import SGD, Adam, lr_scheduler
 from tqdm import tqdm
 import math
@@ -151,7 +148,8 @@ def train(hyp):
 
             with amp.autocast():
                 for key in batchs.keys():
-                    batchs[key] = batchs[key].cuda()
+                    if CUDA:
+                        batchs[key] = batchs[key].cuda()
                 preds = model(batchs['imgs'])
                 metric = criterion(preds, batchs, use_bce)
             loss = metric['loss'] / accumulation_steps
@@ -202,25 +200,4 @@ if __name__ == '__main__':
     with open(hyp_p, 'r', encoding='utf8') as f:
         hyp = yaml.safe_load(f.read())
 
-    # hyp['data']['train_img_dir'] = r'../datasets/pixanimegirls/processed'
-    hyp['data']['train_img_dir'] = [r'../datasets/codat_manga_v3/images/train', r'../datasets/codat_manga_v3/images/val', r'../datasets/pixanimegirls/processed']
-    hyp['data']['train_mask_dir'] = r'../datasets/TextLines'
-    # hyp['data']['train_img_dir'] = r'data/dataset/db_sub'
-    hyp['data']['val_img_dir'] = r'data/dataset/db_sub'
-    hyp['data']['cache'] = False
-    # hyp['data']['aug_param']['size_range'] = [-1]
-
-    hyp['train']['lr0'] = 0.01
-    hyp['train']['lrf'] = 0.002
-    hyp['train']['weight_decay'] = 0.00002
-    hyp['train']['batch_size'] = 4
-    hyp['train']['epochs'] = 160
-    # hyp['train']['optimizer'] = 'sgd'
-
-    hyp['train']['loss'] = 'bce'
-    hyp['logger']['type'] =  'wandb'
-
-    # hyp['resume']['resume_training'] = True
-    # hyp['resume']['ckpt'] = 'data/db_last_bk.ckpt'
-    # hyp['model']['db_weights'] = r'data/db_last.ckpt'
     train(hyp)

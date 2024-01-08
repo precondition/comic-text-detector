@@ -110,7 +110,7 @@ class LoadImageAndAnnotations(Dataset):
             pbar.close()
         
     def initialize(self):
-        if self.augment:
+        if self._augment:
             if self.multi_size:
                 self.img_size = random.choice(self.valid_size)
     
@@ -238,6 +238,7 @@ def load_image_annotations(self, i, max_size=None, ann_abs2rel=True):
 
 def create_dataloader(img_dir, ann_dir, imgsz, batch_size, augment=False, aug_param=None, cache=False, workers=8, shuffle=False, with_ann=False):
     dataset = LoadImageAndAnnotations(img_dir, ann_dir, imgsz, augment, aug_param, cache, with_ann=with_ann)
+    assert len(dataset) > 0
     batch_size = min(batch_size, len(dataset))
     nw = min([os.cpu_count() // WORLD_SIZE, batch_size if batch_size > 1 else 0, workers])  # number of workers
     if with_ann:
@@ -248,25 +249,22 @@ def create_dataloader(img_dir, ann_dir, imgsz, batch_size, augment=False, aug_pa
     return dataset, loader
 
 if __name__ == '__main__':
-    img_dir = 'data/dataset/db_sub'
     hyp_p = r'data/train_db_hyp.yaml'
     with open(hyp_p, 'r', encoding='utf8') as f:
         hyp = yaml.safe_load(f.read())
-    hyp['data']['train_img_dir'] = img_dir
-    hyp['data']['cache'] = False
     hyp_train, hyp_data, hyp_model, hyp_logger, hyp_resume = hyp['train'], hyp['data'], hyp['model'], hyp['logger'], hyp['resume']
     batch_size = hyp_train['batch_size']
     batch_size = 1
-    num_workers = 0
+    num_workers = 1
     train_img_dir, train_mask_dir, imgsz, augment, aug_param = hyp_data['train_img_dir'], hyp_data['train_mask_dir'], hyp_data['imgsz'], hyp_data['augment'], hyp_data['aug_param']
 
+    print(f"{(train_img_dir, train_mask_dir, imgsz, batch_size, augment, aug_param, True, num_workers, hyp_data['cache'], True)=}")
     train_dataset, train_loader = create_dataloader(train_img_dir, train_mask_dir, imgsz, batch_size, augment, aug_param, shuffle=True, workers=num_workers, cache=hyp_data['cache'], with_ann=True)
 
     for ii in range(10):
         
         for batchs in train_loader:
             train_dataset.initialize()
-            print(train_dataset.img_size)
             img = batchs['imgs'][0]
             
             img = train_dataset.inverse_transform(img)
@@ -276,10 +274,13 @@ if __name__ == '__main__':
             shrink_mask = batchs['shrink_mask'][0]
             polys = batchs['text_polys'][0].numpy().astype(np.int32)
             for p in polys:
-                cv2.polylines(img,[p],True,(255, 0, 0), thickness=2)
+                cv2.polylines(img,[p],True,(255, 0, 200), thickness=1)
             cv2.imshow('imgs', img)
-            cv2.imshow('threshold_map', threshold_map.numpy())
-            cv2.imshow('threshold_mask', threshold_mask.numpy())
-            cv2.imshow('shrink_map', shrink_map.numpy())
-            cv2.imshow('shrink_mask', shrink_mask.numpy())
+            #cv2.imshow('threshold_map', threshold_map.numpy())
+            #cv2.imshow('threshold_mask', threshold_mask.numpy())
+            #cv2.imshow('shrink_map', shrink_map.numpy())
+            #cv2.imshow('shrink_mask', shrink_mask.numpy())
             cv2.waitKey(0) 
+            break
+
+    print("end")
