@@ -11,9 +11,9 @@ data:
     hsv: 0.3
     mini_mosaic: 0.7
     flip_lr: 0.0
-    neg: 0.3
+    neg: 0.0
     size_range: [0.85, 1.1]
-    rotate: 0.33
+    rotate: 0.0
     rotate_range: [-20, 20]
   save_dir: 'results'
 
