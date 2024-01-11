@@ -1,27 +1,27 @@
 data:
-  train_img_dir: 'dataset/train'
-  train_mask_dir: 'dataset/train_annotations'
-  val_img_dir: 'dataset/val'
-  val_mask_dir: 'dataset/val_annotations'
+  train_img_dir: 'dataset/full_train'
+  train_mask_dir: 'dataset/full_train_annotations'
+  val_img_dir: 'dataset/full_val'
+  val_mask_dir: 'dataset/full_val_annotations'
   imgsz: 1024
   augment: True
   num_workers: 8
   cache: False
   aug_param:
-    hsv: 0.3
+    hsv: 0.4
     mini_mosaic: 0.7
-    flip_lr: 0.0
+    flip_lr: 0.3
     neg: 0.0
     size_range: [0.85, 1.1]
-    rotate: 0.0
+    rotate: 0.3
     rotate_range: [-20, 20]
   save_dir: 'results'
 
 train:
-  epochs: 160
+  epochs: 80
   linear_lr: False
   optimizer: 'adam' # or 'sgd'
-  batch_size: 4
+  batch_size: 128
   lr0: 0.01
   lrf: 0.002
   warm_up: True
@@ -37,7 +37,7 @@ train:
 model:
   weights: 'data/comictextdetector-blk_det.pt'
   unet_weights: 'data/comictextdetector-text_seg.pt'
-  db_weights: 'data/comictextdetector-text_det.pt'
+  db_weights: 'data/kuzushiji-text_det.pt'
   act: 'leaky'
 
 logger:
