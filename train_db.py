@@ -187,9 +187,9 @@ def train(hyp):
                         'run_id': logger.wandb.id if logger.wandb is not None else None,
                         'date': datetime.now().isoformat(),
                         'hyp': hyp}
-            torch.save(last_ckpt, 'data/db_last.ckpt')
+            torch.save(last_ckpt, os.path.join(hyp_data["save_dir"], 'db_last.ckpt'))
             if save_best:
-                shutil.copy('data/db_last.ckpt', 'data/db_best.ckpt')
+                shutil.copy(os.path.join(hyp_data["save_dir"], 'db_last.ckpt'), os.path.join(hyp_data["save_dir"], 'db_best.ckpt'))
             if logger is not None:
                 logger.on_train_epoch_end(epoch, log_dict)
         scheduler.step()
