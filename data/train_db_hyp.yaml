@@ -21,7 +21,7 @@ train:
   epochs: 80
   linear_lr: False
   optimizer: 'adam' # or 'sgd'
-  batch_size: 64
+  batch_size: 4
   lr0: 0.01
   lrf: 0.002
   warm_up: True
