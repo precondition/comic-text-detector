@@ -46,6 +46,6 @@ logger:
   project: 'ComicTextDetector for Kuzushiji'
 
 resume:
-  resume_training: False
-  ckpt: ''
+  resume_training: True
+  ckpt: 'data/db_last_swift-donkey-18.ckpt'
   
