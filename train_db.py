@@ -34,6 +34,7 @@ def eval_model(model: nn.Module, val_loader, post_process, metric_cls, criterion
     total_frame = 0.0
     total_time = 0.0
     m_loss = 0
+    scaler = amp.GradScaler(enabled=CUDA)
     model.eval()
     for i, batch in tqdm(enumerate(val_loader), total=len(val_loader), desc='test model'):
         with torch.no_grad():
