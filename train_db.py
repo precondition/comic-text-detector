@@ -4,7 +4,7 @@ import math
 from torch.cuda import amp
 import torch
 from utils.loss import DBLoss
-from torch import nn
+import torch.nn as nn
 import yaml
 from basemodel import TextDetector
 from utils.db_utils import SegDetectorRepresenter, QuadMetric
