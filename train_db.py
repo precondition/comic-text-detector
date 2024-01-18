@@ -28,11 +28,12 @@ np.random.seed(0)
 def one_cycle(y1=0.0, y2=1.0, steps=100):
     return lambda x: ((1 - math.cos(x * math.pi / steps)) / 2) * (y2 - y1) + y1
 
-def eval_model(model: nn.Module, val_loader, post_process, metric_cls):
+def eval_model(model: nn.Module, val_loader, post_process, metric_cls, criterion, use_bce):
     # global DEVICE
     raw_metrics = []
     total_frame = 0.0
     total_time = 0.0
+    m_loss = 0
     model.eval()
     for i, batch in tqdm(enumerate(val_loader), total=len(val_loader), desc='test model'):
         with torch.no_grad():
@@ -43,7 +44,16 @@ def eval_model(model: nn.Module, val_loader, post_process, metric_cls):
                         batch[key] = value.to(DEVICE)
             start = time.time()
             with amp.autocast():
+                for key in batchs.keys():
+                    if CUDA:
+                        batchs[key] = batchs[key].cuda()
                 preds = model(batch['imgs'])
+                metric = criterion(preds, batch, use_bce)
+            loss = metric["loss"]
+            scaler.scale(loss).backward()
+
+            m_loss = (m_loss * i + loss.detach()) / (i + 1)
+
             boxes, scores = post_process(batch, preds,is_output_polygon=False)
             total_frame += batch['imgs'].size()[0]
             total_time += time.time() - start
@@ -51,7 +61,7 @@ def eval_model(model: nn.Module, val_loader, post_process, metric_cls):
             raw_metrics.append(raw_metric)
     metrics = metric_cls.gather_measure(raw_metrics)
     LOGGER.info('FPS:{}'.format(total_frame / total_time))
-    return metrics['recall'].avg, metrics['precision'].avg, metrics['fmeasure'].avg
+    return metrics['recall'].avg, metrics['precision'].avg, metrics['fmeasure'].avg, m_loss
 
 def train(hyp):
     start_epoch = 0
@@ -164,13 +174,14 @@ def train(hyp):
             m_loss_b = (m_loss_b * i + metric['loss_binary_maps'].detach()) / (i + 1)
 
         if i % eval_interval == 0:
-            recall, precision, fmeasure = eval_model(model,  val_loader, post_process, metric_cls)
+            recall, precision, fmeasure, val_loss = eval_model(model,  val_loader, post_process, metric_cls, criterion, use_bce)
             log_dict = {}
             log_dict['train/lr'] = optimizer.param_groups[0]['lr']
             log_dict['train/loss'] = m_loss
             log_dict['train/loss_shrink'] = m_loss_s
             log_dict['train/loss_threshold'] = m_loss_t
             log_dict['train/loss_binary_maps'] = m_loss_b
+            log_dict['eval/loss'] = val_loss
             log_dict['eval/recall'] = recall
             log_dict['eval/precision'] = precision
             log_dict['eval/f1'] = fmeasure
