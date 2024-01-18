@@ -190,6 +190,7 @@ def train(hyp):
             save_best = best_f1 < fmeasure
             if save_best:
                 best_f1 = fmeasure
+                best_epoch = epoch
             last_ckpt = {'epoch': epoch,
                         'best_f1': best_f1,
                         'weights': model.dbnet.state_dict(),
