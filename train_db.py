@@ -44,9 +44,9 @@ def eval_model(model: nn.Module, val_loader, post_process, metric_cls, criterion
                         batch[key] = value.to(DEVICE)
             start = time.time()
             with amp.autocast():
-                for key in batchs.keys():
+                for key in batch.keys():
                     if CUDA:
-                        batchs[key] = batchs[key].cuda()
+                        batch[key] = batch[key].cuda()
                 preds = model(batch['imgs'])
                 metric = criterion(preds, batch, use_bce)
             loss = metric["loss"]
