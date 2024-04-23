@@ -65,6 +65,8 @@ def model2annotations(model_path, img_dir_list, save_dir, save_json=False):
                     polys = np.array(polys)
                 polys = polys.reshape(-1, 8)
                 np.savetxt(poly_save_path, polys, fmt='%d')
+            else:
+                print(f"No polygons detected in image “{imgname}”")
             if save_json:
                 with open(osp.join(save_dir, imname+'.json'), 'w', encoding='utf8') as f:
                     f.write(json.dumps(blk_dict_list, ensure_ascii=False, cls=NumpyEncoder))
